@@ -1,4 +1,4 @@
-﻿namespace Helpers.Secrets.Models;
+﻿namespace SecretsManager.Models;
 
 public class DBConnection
 {

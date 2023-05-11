@@ -1,8 +1,7 @@
 ﻿using Amazon;
 using Newtonsoft.Json;
 using Amazon.SecretsManager;
-using Helpers.Secrets.Models;
-using Helpers.Secrets.Exceptions;
+using SecretsManager.Models;
 using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
@@ -16,25 +15,21 @@ public static class SecretManager
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-            throw new Exception(ExceptionsMessages.SecretWithoutData(secretName));
+            throw new ArgumentNullException(nameof(connection.ConnectionString));
 
         return connection.ConnectionString;
     }
 
     public static async Task<T> GetSecretValueAsync<T>(string secretName, IAmazonSecretsManager client) where T : class
     {
-        string? secretString = await GetSecretAsync(secretName, client).ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(secretString))
-            throw new Exception(ExceptionsMessages.SecretNotFound());
+        string secretResponse = await GetSecretAsync(secretName, client);
 
-        T? secretValue = JsonConvert.DeserializeObject<T>(secretString);
-        if (secretValue == null)
-            throw new Exception(ExceptionsMessages.DeserializeSecretError<T>());
+        T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
 
-        return secretValue;
+        return secretValue ?? throw new ArgumentNullException(nameof(secretValue));
     }
 
-    public static async Task<string?> GetSecretAsync(string secretName, IAmazonSecretsManager client)
+    public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
     {
         var request = new GetSecretValueRequest
         {
@@ -52,14 +47,15 @@ public static class SecretManager
             throw;
         }
 
-        if (response != null)
-            return response.SecretString;
+        if (string.IsNullOrWhiteSpace(response.SecretString))
+            throw new ArgumentNullException(nameof(response.SecretString));
 
-        return null;
+        return response.SecretString;
     }
 
     public static IAmazonSecretsManager CreateClient() =>
         new AmazonSecretsManagerClient(
             RegionEndpoint.GetBySystemName(
                 Environment.GetEnvironmentVariable("AWS_REGION")));
+
 }
