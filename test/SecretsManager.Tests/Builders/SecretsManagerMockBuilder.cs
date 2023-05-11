@@ -26,12 +26,6 @@ public class SecretsManagerMockBuilder
         return this;
     }
 
-    public SecretsManagerMockBuilder WithVersionId(string versionId)
-    {
-        secretValueResponse.VersionId = versionId;
-        return this;
-    }
-
     public SecretsManagerMockBuilder WithSecretString(string secretString)
     {
         secretValueResponse.SecretString = secretString;
