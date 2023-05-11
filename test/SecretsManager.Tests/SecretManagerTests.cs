@@ -51,15 +51,11 @@ public class SecretManagerTests
     [Fact]
     public async Task GetSecretAsync_ExceptionThrown_ThrowsException()
     {
-        var secretName = "validSecret";
-        var secretValue = "secretData";
         var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
-            .WithSecretString(secretValue)
             .WithException()
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
+        Func<Task> testCode = () => SecretManager.GetSecretAsync("secret", client.Object);
 
         var exception = await Assert.ThrowsAsync<AmazonSecretsManagerException>(testCode);
         Assert.Equal("This should not be called", exception.Message);
