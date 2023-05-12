@@ -3,15 +3,21 @@ using Newtonsoft.Json;
 using Amazon.SecretsManager;
 using SecretsManager.Models;
 using Amazon.SecretsManager.Model;
+using Utility.EnvironmentVariables;
 
 namespace SecretsManager;
 
 public static class SecretManager
 {
+    [EnvironmentVariable("SECRET_NAME_OF_CONNECTION")]
+    private static string? SecretNameOfConnection { get; set; }
+
     public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
     {
-        var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION")
-            ?? throw new ArgumentNullException("SECRET_NAME_OF_CONNECTION", "The environment cannot be null or empty.");
+        EnvironmentVariables.Populate();
+
+        var secretName = SecretNameOfConnection
+            ?? throw new ArgumentNullException(nameof(SecretNameOfConnection), "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
