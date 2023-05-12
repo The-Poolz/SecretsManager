@@ -7,7 +7,7 @@ namespace SecretsManager.Tests;
 
 public class SecretManagerTests
 {
-    private string DeserializeExceptionMessage =>
+    private static string DeserializeExceptionMessage =>
         $"Validation failed: {Environment.NewLine} -- secretResponse: " +
         $"Could not deserialize the secret response to type {typeof(DBConnection)}. " +
         $"Severity: Error{Environment.NewLine} -- DeserializedObject: " +

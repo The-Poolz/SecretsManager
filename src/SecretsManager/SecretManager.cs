@@ -40,6 +40,6 @@ public class SecretManager
         return response.SecretString;
     }
 
-    private IAmazonSecretsManager CreateClient() =>
+    private static IAmazonSecretsManager CreateClient() =>
         new AmazonSecretsManagerClient(RegionProvider.GetRegionEndpoint());
 }
