@@ -9,11 +9,11 @@ namespace SecretsManager.Tests;
 public class SecretManagerTests
 {
     private const string NullSecretStringExceptionMessage =
-        "The secret string cannot be null or empty. (Parameter 'SecretString')";
+        "The secret string cannot be null or empty.";
     private const string NullConnectionStringExceptionMessage =
-        "The connection string cannot be null or empty. (Parameter 'ConnectionString')";
+        "The connection string cannot be null or empty.";
     private const string EnvironmentNotSetExceptionMessage =
-        "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty. (Parameter 'secretName')";
+        "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.";
 
     [Fact]
     public void CreateClient_ValidRegion_ReturnsSecretsManagerClient()
@@ -51,7 +51,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(testCode);
+        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
@@ -93,7 +93,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(testCode);
+        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
@@ -118,7 +118,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(testCode);
+        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
         Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
     }
 
@@ -132,7 +132,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(testCode);
+        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
         Assert.Equal(NullConnectionStringExceptionMessage, exception.Message);
     }
 }
