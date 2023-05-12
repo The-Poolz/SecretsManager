@@ -12,7 +12,7 @@ public class SecretManagerTests
         "The secret string cannot be null or empty.";
     private const string NullConnectionStringExceptionMessage =
         "The connection string cannot be null or empty.";
-    private string EnvironmentNotSetExceptionMessage(string envName) =>
+    private static string EnvironmentNotSetExceptionMessage(string envName) =>
         $"The environment '{envName}' cannot be null or empty.";
 
     [Fact]
