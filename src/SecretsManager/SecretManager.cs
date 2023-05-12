@@ -37,15 +37,7 @@ public static class SecretManager
             VersionStage = "AWSCURRENT"
         };
 
-        GetSecretValueResponse response;
-        try
-        {
-            response = await client.GetSecretValueAsync(request);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        var response = await client.GetSecretValueAsync(request);
 
         if (string.IsNullOrWhiteSpace(response.SecretString))
             throw new ArgumentNullException(nameof(response.SecretString), "The secret string cannot be null or empty.");
