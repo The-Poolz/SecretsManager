@@ -1,6 +1,7 @@
 ﻿using Amazon;
-using Newtonsoft.Json;
+using FluentValidation;
 using Amazon.SecretsManager;
+using SecretsManager.Validation;
 using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
@@ -14,16 +15,15 @@ public class SecretManager
         this.client = client;
     }
 
-    public virtual T GetSecretValue<T>(string secretName) where T : class
+    public virtual T TryGetSecretValue<T>(string secretName, T secret)
     {
         string secretResponse = GetSecretString(secretName);
 
-        T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
+        var validator = new DeserializeValidator<T>(secretResponse);
 
-        if (secretValue == null)
-            throw new InvalidOperationException($"Could not deserialize the secret response to type {typeof(T)}.");
+        validator.ValidateAndThrow(secret);
 
-        return secretValue;
+        return validator.DeserializedObject;
     }
 
     private string GetSecretString(string secretName)
