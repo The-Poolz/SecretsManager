@@ -11,7 +11,7 @@ public static class SecretManager
     public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
     {
         var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
-        if (string.IsNullOrEmpty(secretName))
+        if (string.IsNullOrWhiteSpace(secretName))
             throw new ArgumentNullException(nameof(secretName), "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
