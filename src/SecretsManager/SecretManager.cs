@@ -7,7 +7,7 @@ namespace SecretsManager;
 
 public class SecretManager
 {
-    private readonly IAmazonSecretsManager client;
+    protected readonly IAmazonSecretsManager client;
 
     public SecretManager(IAmazonSecretsManager? client = null)
     {
@@ -25,7 +25,7 @@ public class SecretManager
         return validator.DeserializedObject;
     }
 
-    private string GetSecretString(string secretName)
+    protected string GetSecretString(string secretName)
     {
         var request = new GetSecretValueRequest
         {
@@ -40,6 +40,6 @@ public class SecretManager
         return response.SecretString;
     }
 
-    private static IAmazonSecretsManager CreateClient() =>
+    protected static IAmazonSecretsManager CreateClient() =>
         new AmazonSecretsManagerClient(RegionProvider.GetRegionEndpoint());
 }
