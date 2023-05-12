@@ -17,9 +17,12 @@ This class provides a way to manage secrets, specifically database connection st
 It is also thrown when a secret value cannot be deserialized to the specified type.
 
 ### Methods
-- `GetDbConnectionAsync()`: Asynchronously retrieves a database connection string. The name of the secret is retrieved from the `SECRET_NAME_OF_CONNECTION` environment variable.
 
-#### Example
+#### GetDbConnectionAsync()
+
+Asynchronously retrieves a database connection string. The name of the secret is retrieved from the `SECRET_NAME_OF_CONNECTION` environment variable.
+
+Example
 ```csharp
 // Create client using environment variable
 var client = SecretManager.CreateClient();
@@ -27,9 +30,11 @@ var client = SecretManager.CreateClient();
 var connection = await new SecretManager(client).GetDbConnectionAsync();
 ```
 
-- GetSecretValueAsync<T>(string secretName): Asynchronously retrieves a secret value of the specified type. The secret value is deserialized from JSON format.
+#### GetSecretValueAsync<T>(string secretName)
 
-#### Example
+Asynchronously retrieves a secret value of the specified type. The secret value is deserialized from JSON format.
+
+Example
 ```csharp
 // Create client using environment variable
 var client = SecretManager.CreateClient();
@@ -42,9 +47,11 @@ var secretName = "YourSecretName"
 var connection = await new SecretManager(client).GetSecretValueAsync<YourModel>(secretName);
 ```
 
-- GetSecretAsync(string secretName): Asynchronously retrieves a secret value as a string.
+#### GetSecretAsync(string secretName)
 
-#### Example
+Asynchronously retrieves a secret value as a string.
+
+Example
 ```csharp
 // Create client using environment variable
 var client = SecretManager.CreateClient();
@@ -56,9 +63,11 @@ var secretName = "YourSecretName"
 var connection = await new SecretManager(client).GetSecretAsync(secretName);
 ```
 
-- CreateClient(RegionEndpoint? region = null): Creates an IAmazonSecretsManager client. The AWS region is retrieved from the `AWS_REGION` environment variable, or can be provided as an argument.
+#### CreateClient(RegionEndpoint? region = null)
 
-#### Example
+Creates an IAmazonSecretsManager client. The AWS region is retrieved from the `AWS_REGION` environment variable, or can be provided as an argument.
+
+Example
 ```csharp
 // Create client using environment variable
 // AWS platform contain system environment 'AWS_REGION' who contain region name where code be launch
