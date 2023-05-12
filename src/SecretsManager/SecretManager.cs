@@ -6,31 +6,38 @@ using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
 
-public static class SecretManager
+public class SecretManager
 {
-    public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
+    private readonly IAmazonSecretsManager client;
+
+    public SecretManager(IAmazonSecretsManager client)
+    {
+        this.client = client;
+    }
+
+    public virtual async Task<string> GetDbConnectionAsync()
     {
         var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
         if (string.IsNullOrWhiteSpace(secretName))
             throw new InvalidOperationException("The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
-        var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
+        var connection = await GetSecretValueAsync<DBConnection>(secretName);
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
             throw new InvalidOperationException("The connection string cannot be null or empty.");
 
         return connection.ConnectionString;
     }
 
-    public static async Task<T> GetSecretValueAsync<T>(string secretName, IAmazonSecretsManager client) where T : class
+    public virtual async Task<T> GetSecretValueAsync<T>(string secretName) where T : class
     {
-        string secretResponse = await GetSecretAsync(secretName, client);
+        string secretResponse = await GetSecretAsync(secretName);
 
         T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
 
         return secretValue ?? throw new InvalidOperationException($"Could not deserialize the secret response to type {typeof(T)}.");
     }
 
-    public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
+    public virtual async Task<string> GetSecretAsync(string secretName)
     {
         var request = new GetSecretValueRequest
         {
@@ -46,8 +53,15 @@ public static class SecretManager
         return response.SecretString;
     }
 
-    public static IAmazonSecretsManager CreateClient() =>
-        new AmazonSecretsManagerClient(
-            RegionEndpoint.GetBySystemName(
-                Environment.GetEnvironmentVariable("AWS_REGION")));
+    public static IAmazonSecretsManager CreateClient(RegionEndpoint? region = null)
+    {
+        if (region == null)
+        {
+            var envRegion = Environment.GetEnvironmentVariable("AWS_REGION")
+                ?? throw new InvalidOperationException("The environment 'AWS_REGION' cannot be null or empty.");
+            region = RegionEndpoint.GetBySystemName(envRegion);
+        }
+
+        return new AmazonSecretsManagerClient(region);
+    }
 }
