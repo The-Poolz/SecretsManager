@@ -1,4 +1,4 @@
-﻿namespace SecretsManager.Models;
+﻿namespace SecretsManager.Tests.Models;
 
 public class DBConnection
 {
