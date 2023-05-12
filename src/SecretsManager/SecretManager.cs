@@ -12,7 +12,7 @@ public static class SecretManager
     {
         var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
         if (string.IsNullOrWhiteSpace(secretName))
-            throw new ArgumentNullException(nameof(secretName), "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
+            throw new ArgumentNullException("secretName", "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
