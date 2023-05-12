@@ -52,26 +52,21 @@ public class SecretManagerTests
     [Fact]
     public async Task GetSecretAsync_ValidSecret_ReturnsSecretString()
     {
-        var secretName = "validSecret";
-        var secretValue = "secretData";
         var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
-            .WithSecretString(secretValue)
             .Build();
 
-        var result = await new SecretManager(client.Object).GetSecretAsync(secretName);
+        var result = await new SecretManager(client.Object).GetSecretAsync(SecretsManagerMockBuilder.SecretName);
 
-        Assert.Equal(secretValue, result);
+        Assert.Equal(SecretsManagerMockBuilder.SecretString, result);
     }
 
     [Fact]
     public async Task GetSecretAsync_SecretNotFound_ThrowsException()
     {
-        var secretName = "nonExistentSecret";
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretAsync(secretName);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretAsync("nonExistentSecret");
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
@@ -93,12 +88,10 @@ public class SecretManagerTests
     [Fact]
     public async Task GetSecretValueAsync_ValidSecret_ReturnsDeserializedSecret()
     {
-        var secretName = "ConnectionToDB";
         var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
             .Build();
 
-        var result = await new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(secretName);
+        var result = await new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(SecretsManagerMockBuilder.SecretName);
 
         Assert.NotNull(result);
         Assert.Equal("secret connection", result.ConnectionString);
@@ -107,13 +100,11 @@ public class SecretManagerTests
     [Fact]
     public async Task GetSecretValueAsync_SecretNotFound_ThrowsException()
     {
-        var secretName = "ConnectionToDB";
         var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
             .WithSecretString(string.Empty)
             .Build();
 
-        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(secretName);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(SecretsManagerMockBuilder.SecretName);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
@@ -122,7 +113,7 @@ public class SecretManagerTests
     [Fact]
     public async Task GetDbConnectionAsync_ValidSecret_ReturnsConnectionString()
     {
-        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", "ConnectionToDB");
+        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", SecretsManagerMockBuilder.SecretName);
         var client = new SecretsManagerMockBuilder()
             .Build();
 
@@ -147,7 +138,7 @@ public class SecretManagerTests
     [Fact]
     public async Task GetDbConnectionAsync_ConnectionStringMissing_ThrowsException()
     {
-        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", "ConnectionToDB");
+        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", SecretsManagerMockBuilder.SecretName);
         var client = new SecretsManagerMockBuilder()
             .WithSecretString("{\"connectionString\": \"\"}")
             .Build();

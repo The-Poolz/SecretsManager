@@ -6,6 +6,9 @@ namespace SecretsManager.Tests.Builders;
 
 public class SecretsManagerMockBuilder
 {
+    public static string SecretString => "{ \"connectionString\" : \"secret connection\" }";
+    public static string SecretName => "ConnectionToDB";
+
     private readonly GetSecretValueResponse secretValueResponse;
     private bool throwException;
 
@@ -15,7 +18,7 @@ public class SecretsManagerMockBuilder
         {
             Name = "ConnectionToDB",
             VersionId = "01234567890123456789012345678901",
-            SecretString = "{ \"connectionString\" : \"secret connection\" }"
+            SecretString = SecretString
         };
         throwException = false;
     }
@@ -63,5 +66,4 @@ public class SecretsManagerMockBuilder
 
         return secretsManager;
     }
-
 }
