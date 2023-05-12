@@ -13,7 +13,7 @@ public class SecretManagerTests
     private const string NullConnectionStringExceptionMessage =
         "The connection string cannot be null or empty. (Parameter 'ConnectionString')";
     private const string EnvironmentNotSetExceptionMessage =
-        "The environment cannot be null or empty. (Parameter 'SECRET_NAME_OF_CONNECTION')";
+        "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty. (Parameter 'secretName')";
 
     [Fact]
     public void CreateClient_ValidRegion_ReturnsSecretsManagerClient()
