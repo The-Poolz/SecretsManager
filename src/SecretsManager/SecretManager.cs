@@ -1,8 +1,7 @@
 ﻿using Amazon;
 using Newtonsoft.Json;
 using Amazon.SecretsManager;
-using Helpers.Secrets.Models;
-using Helpers.Secrets.Exceptions;
+using SecretsManager.Models;
 using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
@@ -11,30 +10,27 @@ public static class SecretManager
 {
     public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
     {
-        var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION")
-            ?? throw new ArgumentNullException("SECRET_NAME_OF_CONNECTION");
+        var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
+        if (string.IsNullOrWhiteSpace(secretName))
+            throw new InvalidOperationException("The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-            throw new Exception(ExceptionsMessages.SecretWithoutData(secretName));
+            throw new InvalidOperationException("The connection string cannot be null or empty.");
 
         return connection.ConnectionString;
     }
 
     public static async Task<T> GetSecretValueAsync<T>(string secretName, IAmazonSecretsManager client) where T : class
     {
-        string? secretString = await GetSecretAsync(secretName, client).ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(secretString))
-            throw new Exception(ExceptionsMessages.SecretNotFound());
+        string secretResponse = await GetSecretAsync(secretName, client);
 
-        T? secretValue = JsonConvert.DeserializeObject<T>(secretString);
-        if (secretValue == null)
-            throw new Exception(ExceptionsMessages.DeserializeSecretError<T>());
+        T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
 
-        return secretValue;
+        return secretValue ?? throw new InvalidOperationException($"Could not deserialize the secret response to type {typeof(T)}.");
     }
 
-    public static async Task<string?> GetSecretAsync(string secretName, IAmazonSecretsManager client)
+    public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
     {
         var request = new GetSecretValueRequest
         {
@@ -42,20 +38,12 @@ public static class SecretManager
             VersionStage = "AWSCURRENT"
         };
 
-        GetSecretValueResponse response;
-        try
-        {
-            response = await client.GetSecretValueAsync(request);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        var response = await client.GetSecretValueAsync(request);
 
-        if (response != null)
-            return response.SecretString;
+        if (string.IsNullOrWhiteSpace(response.SecretString))
+            throw new InvalidOperationException("The secret string cannot be null or empty.");
 
-        return null;
+        return response.SecretString;
     }
 
     public static IAmazonSecretsManager CreateClient() =>
