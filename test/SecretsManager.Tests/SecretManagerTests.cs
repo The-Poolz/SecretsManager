@@ -1,5 +1,4 @@
 using Xunit;
-using Amazon;
 using FluentValidation;
 using SecretsManager.Tests.Models;
 using SecretsManager.Tests.Builders;
@@ -13,42 +12,6 @@ public class SecretManagerTests
         $"Could not deserialize the secret response to type {typeof(DBConnection)}. " +
         $"Severity: Error{Environment.NewLine} -- DeserializedObject: " +
         $"'Deserialized Object' must not be empty. Severity: Error";
-    private const string EnvironmentNotSetExceptionMessage =
-        $"The environment 'AWS_REGION' cannot be null or empty.";
-
-    [Fact]
-    public void CreateClient_SetFromEnvironment_ReturnsSecretsManagerClient()
-    {
-        var expectedRegionEndpoint = RegionEndpoint.AFSouth1;
-        Environment.SetEnvironmentVariable("AWS_REGION", expectedRegionEndpoint.SystemName);
-
-        var result = SecretManager.CreateClient();
-
-        Assert.NotNull(result);
-        Assert.Equal(expectedRegionEndpoint, result.Config.RegionEndpoint);
-    }
-
-    [Fact]
-    public void CreateClient_SetFromEnvironment_ThrowsException()
-    {
-        Environment.SetEnvironmentVariable("AWS_REGION", "");
-
-        Action testCode = () => SecretManager.CreateClient();
-
-        var exception = Assert.Throws<InvalidOperationException>(testCode);
-        Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
-    }
-
-    [Fact]
-    public void CreateClient_SetFromParameter_ReturnsSecretsManagerClient()
-    {
-        var expectedRegionEndpoint = RegionEndpoint.AFSouth1;
-
-        var result = SecretManager.CreateClient(expectedRegionEndpoint);
-
-        Assert.NotNull(result);
-        Assert.Equal(expectedRegionEndpoint, result.Config.RegionEndpoint);
-    }
 
     [Fact]
     public void TryGetSecretValue_ValidSecret_ReturnsDeserializedSecret()

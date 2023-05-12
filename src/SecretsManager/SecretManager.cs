@@ -1,5 +1,4 @@
-﻿using Amazon;
-using FluentValidation;
+﻿using FluentValidation;
 using Amazon.SecretsManager;
 using SecretsManager.Validation;
 using Amazon.SecretsManager.Model;
@@ -10,18 +9,18 @@ public class SecretManager
 {
     private readonly IAmazonSecretsManager client;
 
-    public SecretManager(IAmazonSecretsManager client)
+    public SecretManager(IAmazonSecretsManager? client = null)
     {
-        this.client = client;
+        this.client = client ?? CreateClient();
     }
 
-    public virtual T TryGetSecretValue<T>(string secretName, T secret)
+    public virtual T TryGetSecretValue<T>(string secretName, T modelOfSecret)
     {
         string secretResponse = GetSecretString(secretName);
 
         var validator = new DeserializeValidator<T>(secretResponse);
 
-        validator.ValidateAndThrow(secret);
+        validator.ValidateAndThrow(modelOfSecret);
 
         return validator.DeserializedObject;
     }
@@ -41,16 +40,6 @@ public class SecretManager
         return response.SecretString;
     }
 
-    // TDO: Make new class RegionProvider
-    public static IAmazonSecretsManager CreateClient(RegionEndpoint? region = null)
-    {
-        if (region == null)
-        {
-            var envRegion = Environment.GetEnvironmentVariable("AWS_REGION")
-                ?? throw new InvalidOperationException("The environment 'AWS_REGION' cannot be null or empty.");
-            region = RegionEndpoint.GetBySystemName(envRegion);
-        }
-
-        return new AmazonSecretsManagerClient(region);
-    }
+    private IAmazonSecretsManager CreateClient() =>
+        new AmazonSecretsManagerClient(RegionProvider.GetRegionEndpoint());
 }

@@ -2,12 +2,17 @@
 
 namespace SecretsManager;
 
-public class RegionProvider
+public static class RegionProvider
 {
-    public RegionEndpoint Region { get; set; }
+    public static RegionEndpoint DefaultRegion { get; set; } = RegionEndpoint.USEast1;
 
-    public RegionProvider()
+    public static RegionEndpoint GetRegionEndpoint()
     {
-        Region = RegionEndpoint.EUCentral1;
+        var envRegion = Environment.GetEnvironmentVariable("AWS_REGION");
+        if (!string.IsNullOrWhiteSpace(envRegion))
+        {
+            return RegionEndpoint.GetBySystemName(envRegion);
+        }
+        return DefaultRegion;
     }
 }
