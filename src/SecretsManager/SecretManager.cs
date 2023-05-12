@@ -12,11 +12,11 @@ public static class SecretManager
     {
         var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
         if (string.IsNullOrWhiteSpace(secretName))
-            throw new NullReferenceException("The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
+            throw new InvalidOperationException("The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-            throw new NullReferenceException("The connection string cannot be null or empty.");
+            throw new InvalidOperationException("The connection string cannot be null or empty.");
 
         return connection.ConnectionString;
     }
@@ -27,7 +27,7 @@ public static class SecretManager
 
         T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
 
-        return secretValue ?? throw new NullReferenceException($"Could not deserialize the secret response to type {typeof(T)}.");
+        return secretValue ?? throw new InvalidOperationException($"Could not deserialize the secret response to type {typeof(T)}.");
     }
 
     public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
@@ -41,7 +41,7 @@ public static class SecretManager
         var response = await client.GetSecretValueAsync(request);
 
         if (string.IsNullOrWhiteSpace(response.SecretString))
-            throw new NullReferenceException("The secret string cannot be null or empty.");
+            throw new InvalidOperationException("The secret string cannot be null or empty.");
 
         return response.SecretString;
     }

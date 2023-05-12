@@ -51,7 +51,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
 
-        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
@@ -93,7 +93,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
 
-        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
@@ -118,7 +118,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
-        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
     }
 
@@ -132,7 +132,7 @@ public class SecretManagerTests
 
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
-        var exception = await Assert.ThrowsAsync<NullReferenceException>(testCode);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullConnectionStringExceptionMessage, exception.Message);
     }
 }
