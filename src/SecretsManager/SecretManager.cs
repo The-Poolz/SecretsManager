@@ -57,5 +57,4 @@ public static class SecretManager
         new AmazonSecretsManagerClient(
             RegionEndpoint.GetBySystemName(
                 Environment.GetEnvironmentVariable("AWS_REGION")));
-
 }
