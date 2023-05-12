@@ -12,16 +12,38 @@ public class SecretManagerTests
         "The secret string cannot be null or empty.";
     private const string NullConnectionStringExceptionMessage =
         "The connection string cannot be null or empty.";
-    private const string EnvironmentNotSetExceptionMessage =
-        "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.";
+    private string EnvironmentNotSetExceptionMessage(string envName) =>
+        $"The environment '{envName}' cannot be null or empty.";
 
     [Fact]
-    public void CreateClient_ValidRegion_ReturnsSecretsManagerClient()
+    public void CreateClient_SetFromEnvironment_ReturnsSecretsManagerClient()
     {
         var expectedRegionEndpoint = RegionEndpoint.AFSouth1;
         Environment.SetEnvironmentVariable("AWS_REGION", expectedRegionEndpoint.SystemName);
 
         var result = SecretManager.CreateClient();
+
+        Assert.NotNull(result);
+        Assert.Equal(expectedRegionEndpoint, result.Config.RegionEndpoint);
+    }
+
+    [Fact]
+    public void CreateClient_SetFromEnvironment_ThrowsException()
+    {
+        Environment.SetEnvironmentVariable("AWS_REGION", "");
+
+        Action testCode = () => SecretManager.CreateClient();
+
+        var exception = Assert.Throws<InvalidOperationException>(testCode);
+        Assert.Equal(EnvironmentNotSetExceptionMessage("AWS_REGION"), exception.Message);
+    }
+
+    [Fact]
+    public void CreateClient_SetFromParameter_ReturnsSecretsManagerClient()
+    {
+        var expectedRegionEndpoint = RegionEndpoint.AFSouth1;
+
+        var result = SecretManager.CreateClient(expectedRegionEndpoint);
 
         Assert.NotNull(result);
         Assert.Equal(expectedRegionEndpoint, result.Config.RegionEndpoint);
@@ -37,7 +59,7 @@ public class SecretManagerTests
             .WithSecretString(secretValue)
             .Build();
 
-        var result = await SecretManager.GetSecretAsync(secretName, client.Object);
+        var result = await new SecretManager(client.Object).GetSecretAsync(secretName);
 
         Assert.Equal(secretValue, result);
     }
@@ -49,7 +71,7 @@ public class SecretManagerTests
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretAsync(secretName);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
@@ -62,7 +84,7 @@ public class SecretManagerTests
             .WithException()
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretAsync("secret", client.Object);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretAsync("secret");
 
         var exception = await Assert.ThrowsAsync<AmazonSecretsManagerException>(testCode);
         Assert.Equal("This should not be called", exception.Message);
@@ -76,7 +98,7 @@ public class SecretManagerTests
             .WithSecretName(secretName)
             .Build();
 
-        var result = await SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
+        var result = await new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(secretName);
 
         Assert.NotNull(result);
         Assert.Equal("secret connection", result.ConnectionString);
@@ -91,7 +113,7 @@ public class SecretManagerTests
             .WithSecretString(string.Empty)
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetSecretValueAsync<DBConnection>(secretName);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
@@ -104,7 +126,7 @@ public class SecretManagerTests
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        var result = await SecretManager.GetDbConnectionAsync(client.Object);
+        var result = await new SecretManager(client.Object).GetDbConnectionAsync();
 
         Assert.Equal("secret connection", result);
     }
@@ -116,10 +138,10 @@ public class SecretManagerTests
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetDbConnectionAsync();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
-        Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
+        Assert.Equal(EnvironmentNotSetExceptionMessage("SECRET_NAME_OF_CONNECTION"), exception.Message);
     }
 
     [Fact]
@@ -130,7 +152,7 @@ public class SecretManagerTests
             .WithSecretString("{\"connectionString\": \"\"}")
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
+        Func<Task> testCode = () => new SecretManager(client.Object).GetDbConnectionAsync();
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
         Assert.Equal(NullConnectionStringExceptionMessage, exception.Message);
