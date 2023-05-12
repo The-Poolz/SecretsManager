@@ -14,7 +14,7 @@ public class SecretManager
         this.client = client ?? CreateClient();
     }
 
-    public virtual T TryGetSecretValue<T>(string secretName, T modelOfSecret)
+    public virtual T GetSecretValue<T>(string secretName, T modelOfSecret)
     {
         string secretResponse = GetSecretString(secretName);
 

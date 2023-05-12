@@ -14,27 +14,25 @@ public class SecretManagerTests
         $"'Deserialized Object' must not be empty. Severity: Error";
 
     [Fact]
-    public void TryGetSecretValue_ValidSecret_ReturnsDeserializedSecret()
+    public void GetSecretValue_ValidSecret_ReturnsDeserializedSecret()
     {
-        var secret = new DBConnection();
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        var result = new SecretManager(client.Object).TryGetSecretValue(SecretsManagerMockBuilder.SecretName, secret);
+        var result = new SecretManager(client.Object).GetSecretValue(SecretsManagerMockBuilder.SecretName, new DBConnection());
 
         Assert.NotNull(result);
         Assert.Equal("secret connection", result.ConnectionString);
     }
 
     [Fact]
-    public void TryGetSecretValue_SecretNotFound_ThrowsException()
+    public void GetSecretValue_SecretNotFound_ThrowsException()
     {
-        var secret = new DBConnection();
         var client = new SecretsManagerMockBuilder()
             .WithSecretString(string.Empty)
             .Build();
 
-        Action testCode = () => new SecretManager(client.Object).TryGetSecretValue(SecretsManagerMockBuilder.SecretName, secret);
+        Action testCode = () => new SecretManager(client.Object).GetSecretValue(SecretsManagerMockBuilder.SecretName, new DBConnection());
 
         var exception = Assert.Throws<ValidationException>(testCode);
         Assert.Equal(DeserializeExceptionMessage, exception.Message);
