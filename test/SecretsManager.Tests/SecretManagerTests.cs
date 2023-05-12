@@ -8,6 +8,13 @@ namespace SecretsManager.Tests;
 
 public class SecretManagerTests
 {
+    private const string NullSecretStringExceptionMessage =
+        "The secret string cannot be null or empty. (Parameter 'SecretString')";
+    private const string NullConnectionStringExceptionMessage =
+        "The connection string cannot be null or empty. (Parameter 'ConnectionString')";
+    private const string EnvironmentNotSetExceptionMessage =
+        "The environment cannot be null or empty. (Parameter 'SECRET_NAME_OF_CONNECTION')";
+
     [Fact]
     public void CreateClient_ValidRegion_ReturnsSecretsManagerClient()
     {
@@ -36,7 +43,7 @@ public class SecretManagerTests
     }
 
     [Fact]
-    public async Task GetSecretAsync_SecretNotFound_ReturnsNull()
+    public async Task GetSecretAsync_SecretNotFound_ThrowsException()
     {
         var secretName = "nonExistentSecret";
         var client = new SecretsManagerMockBuilder()
@@ -45,7 +52,7 @@ public class SecretManagerTests
         Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
 
         var exception = await Assert.ThrowsAsync<ArgumentNullException>(testCode);
-        Assert.Equal("Value cannot be null. (Parameter 'SecretString')", exception.Message);
+        Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
     [Fact]
@@ -87,7 +94,7 @@ public class SecretManagerTests
         Func<Task> testCode = () => SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
 
         var exception = await Assert.ThrowsAsync<ArgumentNullException>(testCode);
-        Assert.Equal("Value cannot be null. (Parameter 'SecretString')", exception.Message);
+        Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
     }
 
     [Fact]
@@ -112,7 +119,7 @@ public class SecretManagerTests
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
         var exception = await Assert.ThrowsAsync<ArgumentNullException>(testCode);
-        Assert.Equal("Value cannot be null. (Parameter 'SECRET_NAME_OF_CONNECTION')", exception.Message);
+        Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
     }
 
     [Fact]
@@ -126,6 +133,6 @@ public class SecretManagerTests
         Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
 
         var exception = await Assert.ThrowsAsync<ArgumentNullException>(testCode);
-        Assert.Equal("Value cannot be null. (Parameter 'ConnectionString')", exception.Message);
+        Assert.Equal(NullConnectionStringExceptionMessage, exception.Message);
     }
 }

@@ -11,11 +11,11 @@ public static class SecretManager
     public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
     {
         var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION")
-            ?? throw new ArgumentNullException("SECRET_NAME_OF_CONNECTION");
+            ?? throw new ArgumentNullException("SECRET_NAME_OF_CONNECTION", "The environment cannot be null or empty.");
 
         var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
         if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-            throw new ArgumentNullException(nameof(connection.ConnectionString));
+            throw new ArgumentNullException(nameof(connection.ConnectionString) ,"The connection string cannot be null or empty.");
 
         return connection.ConnectionString;
     }
@@ -26,7 +26,7 @@ public static class SecretManager
 
         T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
 
-        return secretValue ?? throw new ArgumentNullException(nameof(secretValue));
+        return secretValue ?? throw new ArgumentNullException(nameof(secretValue), $"Could not deserialize the secret response to type {typeof(T)}.");
     }
 
     public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
@@ -48,7 +48,7 @@ public static class SecretManager
         }
 
         if (string.IsNullOrWhiteSpace(response.SecretString))
-            throw new ArgumentNullException(nameof(response.SecretString));
+            throw new ArgumentNullException(nameof(response.SecretString), "The secret string cannot be null or empty.");
 
         return response.SecretString;
     }
