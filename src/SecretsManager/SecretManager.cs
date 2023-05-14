@@ -1,36 +1,31 @@
-﻿using Amazon;
-using Newtonsoft.Json;
+﻿using FluentValidation;
 using Amazon.SecretsManager;
-using SecretsManager.Models;
+using SecretsManager.Validation;
 using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
 
-public static class SecretManager
+public class SecretManager
 {
-    public static async Task<string> GetDbConnectionAsync(IAmazonSecretsManager? client = null)
+    protected readonly IAmazonSecretsManager client;
+
+    public SecretManager(IAmazonSecretsManager? client = null)
     {
-        var secretName = Environment.GetEnvironmentVariable("SECRET_NAME_OF_CONNECTION");
-        if (string.IsNullOrWhiteSpace(secretName))
-            throw new InvalidOperationException("The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.");
-
-        var connection = await GetSecretValueAsync<DBConnection>(secretName, client ?? CreateClient());
-        if (string.IsNullOrWhiteSpace(connection.ConnectionString))
-            throw new InvalidOperationException("The connection string cannot be null or empty.");
-
-        return connection.ConnectionString;
+        this.client = client ?? CreateClient();
     }
 
-    public static async Task<T> GetSecretValueAsync<T>(string secretName, IAmazonSecretsManager client) where T : class
+    public virtual T GetSecretValue<T>(string secretName, T modelOfSecret)
     {
-        string secretResponse = await GetSecretAsync(secretName, client);
+        string secretResponse = GetSecretString(secretName);
 
-        T? secretValue = JsonConvert.DeserializeObject<T>(secretResponse);
+        var validator = new DeserializeValidator<T>(secretResponse);
 
-        return secretValue ?? throw new InvalidOperationException($"Could not deserialize the secret response to type {typeof(T)}.");
+        validator.ValidateAndThrow(modelOfSecret);
+
+        return validator.DeserializedObject;
     }
 
-    public static async Task<string> GetSecretAsync(string secretName, IAmazonSecretsManager client)
+    protected string GetSecretString(string secretName)
     {
         var request = new GetSecretValueRequest
         {
@@ -38,16 +33,13 @@ public static class SecretManager
             VersionStage = "AWSCURRENT"
         };
 
-        var response = await client.GetSecretValueAsync(request);
-
-        if (string.IsNullOrWhiteSpace(response.SecretString))
-            throw new InvalidOperationException("The secret string cannot be null or empty.");
+        var response = client.GetSecretValueAsync(request)
+            .GetAwaiter()
+            .GetResult();
 
         return response.SecretString;
     }
 
-    public static IAmazonSecretsManager CreateClient() =>
-        new AmazonSecretsManagerClient(
-            RegionEndpoint.GetBySystemName(
-                Environment.GetEnvironmentVariable("AWS_REGION")));
+    protected static IAmazonSecretsManager CreateClient() =>
+        new AmazonSecretsManagerClient(RegionProvider.GetRegionEndpoint());
 }

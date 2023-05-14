@@ -1,138 +1,58 @@
 using Xunit;
-using Amazon;
+using FluentValidation;
 using Amazon.SecretsManager;
-using SecretsManager.Models;
+using SecretsManager.Tests.Models;
 using SecretsManager.Tests.Builders;
 
 namespace SecretsManager.Tests;
 
-public class SecretManagerTests
+public class SecretManagerTests : SecretManager
 {
-    private const string NullSecretStringExceptionMessage =
-        "The secret string cannot be null or empty.";
-    private const string NullConnectionStringExceptionMessage =
-        "The connection string cannot be null or empty.";
-    private const string EnvironmentNotSetExceptionMessage =
-        "The environment 'SECRET_NAME_OF_CONNECTION' cannot be null or empty.";
+    private static string DeserializeExceptionMessage =>
+        $"Validation failed: {Environment.NewLine} -- secretResponse: " +
+        $"Could not deserialize the secret response to type {typeof(DBConnection)}. " +
+        $"Severity: Error{Environment.NewLine} -- DeserializedObject: " +
+        $"'Deserialized Object' must not be empty. Severity: Error";
 
     [Fact]
-    public void CreateClient_ValidRegion_ReturnsSecretsManagerClient()
+    public void Ctor_ClientNotPassed_ExcpectedClient()
     {
-        var expectedRegionEndpoint = RegionEndpoint.AFSouth1;
-        Environment.SetEnvironmentVariable("AWS_REGION", expectedRegionEndpoint.SystemName);
-
-        var result = SecretManager.CreateClient();
+        var result = new SecretManager();
 
         Assert.NotNull(result);
-        Assert.Equal(expectedRegionEndpoint, result.Config.RegionEndpoint);
     }
 
     [Fact]
-    public async Task GetSecretAsync_ValidSecret_ReturnsSecretString()
+    public void CreateClient_ExcpectedClient()
     {
-        var secretName = "validSecret";
-        var secretValue = "secretData";
-        var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
-            .WithSecretString(secretValue)
-            .Build();
+        var result = CreateClient();
 
-        var result = await SecretManager.GetSecretAsync(secretName, client.Object);
-
-        Assert.Equal(secretValue, result);
+        Assert.NotNull(result);
+        Assert.IsType<AmazonSecretsManagerClient>(result);
     }
 
     [Fact]
-    public async Task GetSecretAsync_SecretNotFound_ThrowsException()
+    public void GetSecretValue_ValidSecret_ReturnsDeserializedSecret()
     {
-        var secretName = "nonExistentSecret";
         var client = new SecretsManagerMockBuilder()
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretAsync(secretName, client.Object);
-
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
-        Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
-    }
-
-    [Fact]
-    public async Task GetSecretAsync_ExceptionThrown_ThrowsException()
-    {
-        var client = new SecretsManagerMockBuilder()
-            .WithException()
-            .Build();
-
-        Func<Task> testCode = () => SecretManager.GetSecretAsync("secret", client.Object);
-
-        var exception = await Assert.ThrowsAsync<AmazonSecretsManagerException>(testCode);
-        Assert.Equal("This should not be called", exception.Message);
-    }
-
-    [Fact]
-    public async Task GetSecretValueAsync_ValidSecret_ReturnsDeserializedSecret()
-    {
-        var secretName = "ConnectionToDB";
-        var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
-            .Build();
-
-        var result = await SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
+        var result = new SecretManager(client.Object).GetSecretValue(SecretsManagerMockBuilder.SecretName, new DBConnection());
 
         Assert.NotNull(result);
         Assert.Equal("secret connection", result.ConnectionString);
     }
 
     [Fact]
-    public async Task GetSecretValueAsync_SecretNotFound_ThrowsException()
+    public void GetSecretValue_SecretNotFound_ThrowsException()
     {
-        var secretName = "ConnectionToDB";
         var client = new SecretsManagerMockBuilder()
-            .WithSecretName(secretName)
             .WithSecretString(string.Empty)
             .Build();
 
-        Func<Task> testCode = () => SecretManager.GetSecretValueAsync<DBConnection>(secretName, client.Object);
+        Action testCode = () => new SecretManager(client.Object).GetSecretValue(SecretsManagerMockBuilder.SecretName, new DBConnection());
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
-        Assert.Equal(NullSecretStringExceptionMessage, exception.Message);
-    }
-
-    [Fact]
-    public async Task GetDbConnectionAsync_ValidSecret_ReturnsConnectionString()
-    {
-        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", "ConnectionToDB");
-        var client = new SecretsManagerMockBuilder()
-            .Build();
-
-        var result = await SecretManager.GetDbConnectionAsync(client.Object);
-
-        Assert.Equal("secret connection", result);
-    }
-
-    [Fact]
-    public async Task GetDbConnectionAsync_SecretNotFound_ThrowsException()
-    {
-        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", "");
-        var client = new SecretsManagerMockBuilder()
-            .Build();
-
-        Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
-
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
-        Assert.Equal(EnvironmentNotSetExceptionMessage, exception.Message);
-    }
-
-    [Fact]
-    public async Task GetDbConnectionAsync_ConnectionStringMissing_ThrowsException()
-    {
-        Environment.SetEnvironmentVariable("SECRET_NAME_OF_CONNECTION", "ConnectionToDB");
-        var client = new SecretsManagerMockBuilder()
-            .WithSecretString("{\"connectionString\": \"\"}")
-            .Build();
-
-        Func<Task> testCode = () => SecretManager.GetDbConnectionAsync(client.Object);
-
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(testCode);
-        Assert.Equal(NullConnectionStringExceptionMessage, exception.Message);
+        var exception = Assert.Throws<ValidationException>(testCode);
+        Assert.Equal(DeserializeExceptionMessage, exception.Message);
     }
 }
