@@ -1,6 +1,6 @@
-﻿using Amazon.SecretsManager;
+﻿using Newtonsoft.Json;
+using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using SecretsManager.Serialization;
 
 namespace SecretsManager;
 
@@ -13,18 +13,25 @@ public class SecretManager
         this.client = client ?? CreateClient();
     }
 
-    public virtual T GetSecretValue<T>(string secretName)
+    public virtual string GetSecretValue(string secretId, string secretKey)
     {
-        string secretResponse = GetSecretString(secretName);
+        string secretString = GetSecretString(secretId);
 
-        return JsonDeserializer.Deserialize<T>(secretResponse);
+        var secretResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(secretString)!;
+
+        if (!secretResponse.ContainsKey(secretKey))
+        {
+            throw new KeyNotFoundException($"The specified secret key '{secretKey}' does not exist.");
+        }
+
+        return secretResponse[secretKey];
     }
 
-    protected string GetSecretString(string secretName)
+    protected string GetSecretString(string secretId)
     {
         var request = new GetSecretValueRequest
         {
-            SecretId = secretName,
+            SecretId = secretId,
             VersionStage = "AWSCURRENT"
         };
 

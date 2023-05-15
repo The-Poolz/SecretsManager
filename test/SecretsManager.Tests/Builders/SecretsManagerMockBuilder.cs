@@ -21,12 +21,6 @@ public class SecretsManagerMockBuilder
         };
     }
 
-    public SecretsManagerMockBuilder WithSecretString(string secretString)
-    {
-        secretValueResponse.SecretString = secretString;
-        return this;
-    }
-
     public Mock<IAmazonSecretsManager> Build()
     {
         var secretsManager = new Mock<IAmazonSecretsManager>(MockBehavior.Strict);
