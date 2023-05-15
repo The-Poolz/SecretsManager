@@ -1,6 +1,5 @@
-﻿using FluentValidation;
+﻿using Newtonsoft.Json;
 using Amazon.SecretsManager;
-using SecretsManager.Validation;
 using Amazon.SecretsManager.Model;
 
 namespace SecretsManager;
@@ -14,22 +13,25 @@ public class SecretManager
         this.client = client ?? CreateClient();
     }
 
-    public virtual T GetSecretValue<T>(string secretName, T modelOfSecret)
+    public virtual string GetSecretValue(string secretId, string secretKey)
     {
-        string secretResponse = GetSecretString(secretName);
+        string secretString = GetSecretString(secretId);
 
-        var validator = new DeserializeValidator<T>(secretResponse);
+        var secretResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(secretString)!;
 
-        validator.ValidateAndThrow(modelOfSecret);
+        if (!secretResponse.ContainsKey(secretKey))
+        {
+            throw new KeyNotFoundException($"The specified secret key '{secretKey}' does not exist.");
+        }
 
-        return validator.DeserializedObject;
+        return secretResponse[secretKey];
     }
 
-    protected string GetSecretString(string secretName)
+    protected string GetSecretString(string secretId)
     {
         var request = new GetSecretValueRequest
         {
-            SecretId = secretName,
+            SecretId = secretId,
             VersionStage = "AWSCURRENT"
         };
 
