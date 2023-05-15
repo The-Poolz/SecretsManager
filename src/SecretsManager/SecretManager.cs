@@ -1,7 +1,6 @@
-﻿using FluentValidation;
-using Amazon.SecretsManager;
-using SecretsManager.Validation;
+﻿using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using SecretsManager.Serialization;
 
 namespace SecretsManager;
 
@@ -14,15 +13,11 @@ public class SecretManager
         this.client = client ?? CreateClient();
     }
 
-    public virtual T GetSecretValue<T>(string secretName, T modelOfSecret)
+    public virtual T GetSecretValue<T>(string secretName)
     {
         string secretResponse = GetSecretString(secretName);
 
-        var validator = new DeserializeValidator<T>(secretResponse);
-
-        validator.ValidateAndThrow(modelOfSecret);
-
-        return validator.DeserializedObject;
+        return JsonDeserializer.Deserialize<T>(secretResponse);
     }
 
     protected string GetSecretString(string secretName)
