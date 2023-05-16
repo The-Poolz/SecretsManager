@@ -1,8 +1,21 @@
 # SecretsManager
 
+## How to use
+
+```csharp
+// Create an instance of the AWS Secrets Manager client
+var client = SecretManager.CreateClient();
+
+// Create an instance of the SecretManager class
+var secretManager = new SecretManager(client);
+
+// Retrieve the value of a secret
+var secretValue = secretManager.GetSecretValue("mySecretId", "mySecretKey");
+```
+
 ## `SecretManager` class
 
-This class provides a way to manage secrets, specifically database connection strings, using AWS Secret Manager.
+This class provides a way to manage secrets using AWS Secrets Manager.
 
 ### Properties
 
@@ -10,69 +23,47 @@ This class provides a way to manage secrets, specifically database connection st
 
 ### Constructors
 
-- `SecretManager(IAmazonSecretsManager client)`: Creates a new `SecretManager` instance using the specified AWS Secrets Manager client.
-
-### Exceptions
-- `InvalidOperationException`: This exception is thrown when the required environment variables are not set, or when the secret value or connection string is null or empty.
-It is also thrown when a secret value cannot be deserialized to the specified type.
+- `SecretManager()`: Initializes a new instance of the `SecretManager` class using the default AWS Secrets Manager client.
+- `SecretManager(IAmazonSecretsManager client)`: Initializes a new instance of the `SecretManager` class using the specified AWS Secrets Manager client.
 
 ### Methods
 
-#### GetDbConnectionAsync()
+#### GetSecretValue(string secretId, string secretKey)
 
-Asynchronously retrieves a database connection string. The name of the secret is retrieved from the `SECRET_NAME_OF_CONNECTION` environment variable.
+Retrieves the value of a secret identified by `secretId` and returns the value associated with `secretKey`.
 
-Example
-```csharp
-// Create client using environment variable
-var client = SecretManager.CreateClient();
+- `secretId` (string): The ID or name of the secret.
+- `secretKey` (string): The key used to retrieve the secret value.
 
-var connection = await new SecretManager(client).GetDbConnectionAsync();
-```
+Returns:
+- The secret value associated with `secretKey`.
 
-#### GetSecretValueAsync<T>(string secretName)
+Exceptions:
 
-Asynchronously retrieves a secret value of the specified type. The secret value is deserialized from JSON format.
+- `KeyNotFoundException`: Thrown when the specified secret key does not exist.
 
-Example
-```csharp
-// Create client using environment variable
-var client = SecretManager.CreateClient();
+#### CreateClient()
 
-// Secret name need be set in AWS Secret Manager
-// See docs: https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
-var secretName = "YourSecretName"
+Creates an instance of the AWS Secrets Manager client using the region specified in the `AWS_REGION` environment variable or the default region (`RegionEndpoint.USEast1`).
 
-// YourModel - it's model representing data from 'YourSecretName'
-var connection = await new SecretManager(client).GetSecretValueAsync<YourModel>(secretName);
-```
+Returns:
 
-#### GetSecretAsync(string secretName)
+- An instance of `IAmazonSecretsManager` representing the AWS Secrets Manager client.
 
-Asynchronously retrieves a secret value as a string.
+## `RegionProvider` class
 
-Example
-```csharp
-// Create client using environment variable
-var client = SecretManager.CreateClient();
+This class provides methods for retrieving the AWS region endpoint.
 
-// Secret name need be set in AWS Secret Manager
-// See docs: https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
-var secretName = "YourSecretName"
+### Properties
 
-var connection = await new SecretManager(client).GetSecretAsync(secretName);
-```
+- `DefaultRegion` (RegionEndpoint): The default AWS region endpoint.
 
-#### CreateClient(RegionEndpoint? region = null)
+### Methods
 
-Creates an IAmazonSecretsManager client. The AWS region is retrieved from the `AWS_REGION` environment variable, or can be provided as an argument.
+#### GetRegionEndpoint()
 
-Example
-```csharp
-// Create client using environment variable
-// AWS platform contain system environment 'AWS_REGION' who contain region name where code be launch
-var client = SecretManager.CreateClient();
+Retrieves the AWS region endpoint based on the `AWS_REGION` environment variable or returns the default region if the environment variable is not set.
 
-// You can pass region if needed
-var client = SecretManager.CreateClient(RegionEndpoint.AFSouth1);
-```
+Returns:
+
+- The AWS region endpoint.
