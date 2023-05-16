@@ -1,5 +1,10 @@
 # SecretsManager
 
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=The-Poolz_SecretsManager)
+
+[![SonarScanner for .NET 6](https://github.com/The-Poolz/SecretsManager/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/The-Poolz/SecretsManager/actions/workflows/dotnet.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=The-Poolz_SecretsManager&metric=alert_status&token=372f9dddfc2bc5547a55e9a85cf072de406df1de)](https://sonarcloud.io/summary/new_code?id=The-Poolz_SecretsManager)
+
 ## How to use
 
 ```csharp
