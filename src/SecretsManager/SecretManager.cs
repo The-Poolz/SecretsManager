@@ -8,9 +8,11 @@ public class SecretManager
 {
     protected readonly IAmazonSecretsManager client;
 
-    public SecretManager(IAmazonSecretsManager? client = null)
+    public SecretManager() : this(CreateClient()) { }
+
+    public SecretManager(IAmazonSecretsManager client)
     {
-        this.client = client ?? CreateClient();
+        this.client = client;
     }
 
     public virtual string GetSecretValue(string secretId, string secretKey)
