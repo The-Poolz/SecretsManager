@@ -5,6 +5,7 @@
 [![SonarScanner for .NET 6](https://github.com/The-Poolz/SecretsManager/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/The-Poolz/SecretsManager/actions/workflows/dotnet.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/the-poolz/secretsmanager/badge)](https://www.codefactor.io/repository/github/the-poolz/secretsmanager)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=The-Poolz_SecretsManager&metric=alert_status&token=372f9dddfc2bc5547a55e9a85cf072de406df1de)](https://sonarcloud.io/summary/new_code?id=The-Poolz_SecretsManager)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/The-Poolz/SecretsManager/blob/master/LICENCE)
 
 ## How to use
 
